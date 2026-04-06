@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'services.dart';
 
-class ChatScreen extends StatelessWidget {
+class ChatScreen extends StatefulWidget {
+  @override
+  _ChatScreenState createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final AppServices service = AppServices();
   final controller = TextEditingController();
-  final firestore = FirebaseFirestore.instance;
-
-  void sendMessage() {
-    if (controller.text.isEmpty) return;
-
-    firestore.collection('messages').add({
-      'text': controller.text,
-      'time': FieldValue.serverTimestamp(),
-    });
-
-    controller.clear();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,28 +17,24 @@ class ChatScreen extends StatelessWidget {
       children: [
         Expanded(
           child: StreamBuilder(
-            stream: firestore
-                .collection('messages')
-                .orderBy('time')
-                .snapshots(),
+            stream: service.getMessages(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) return Center(child: Text("Loading..."));
-
               var docs = snapshot.data!.docs;
-
               return ListView.builder(
                 itemCount: docs.length,
                 itemBuilder: (context, i) {
-                  return Container(
-                    margin: EdgeInsets.all(8),
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.greenAccent,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Text(
-                      docs[i]['text'],
-                      style: TextStyle(color: Colors.black),
+                  bool isMe = docs[i]['senderId'] == service.auth.currentUser?.uid;
+                  return Align(
+                    alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Container(
+                      margin: EdgeInsets.all(8),
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isMe ? Colors.greenAccent : Colors.grey[800],
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Text(docs[i]['text'], style: TextStyle(color: Colors.black)),
                     ),
                   );
                 },
@@ -51,13 +42,23 @@ class ChatScreen extends StatelessWidget {
             },
           ),
         ),
-
         Row(
           children: [
-            Expanded(child: TextField(controller: controller)),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                onChanged: (_) => service.setTyping(true),
+                onSubmitted: (_) => service.setTyping(false),
+                decoration: InputDecoration(hintText: "Type a message..."),
+              ),
+            ),
             IconButton(
               icon: Icon(Icons.send),
-              onPressed: sendMessage,
+              onPressed: () {
+                service.sendMessage(controller.text);
+                controller.clear();
+                service.setTyping(false);
+              },
             ),
           ],
         )
