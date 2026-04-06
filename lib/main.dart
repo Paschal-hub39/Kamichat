@@ -4,7 +4,6 @@ import 'auth_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(
     options: FirebaseOptions(
       apiKey: "AIzaSyA5qvHjNlTu06lDukX0QpVnoqldVhKRmPA",
@@ -24,6 +23,7 @@ class KamiChat extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         primaryColor: Colors.green,
+        scaffoldBackgroundColor: Colors.black,
       ),
       home: AuthScreen(),
     );
