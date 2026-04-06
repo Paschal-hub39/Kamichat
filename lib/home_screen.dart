@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'chat_screen.dart';
+import 'status_screen.dart';
+import 'calls_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final tabs = [
-    Center(child: Text("Status 🚀")),
+    StatusScreen(),
     ChatScreen(),
-    Center(child: Text("Calls 📞")),
+    CallsScreen(),
   ];
 
   @override
